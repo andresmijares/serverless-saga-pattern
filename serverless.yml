@@ -13,30 +13,19 @@ provider:
       Action: 
         - "lambda:InvokeFunction"
       Resource: "arn:aws:lambda:*:*:*"
+    - Effect: "Allow"
+      Action: 
+        - "states:ListStateMachines"
+        - "states:StartExecution"
+        - "states:GetExecutionHistory"
+      Resource: "arn:aws:states:*:*:*"
 
 functions:
   get-forecast:
     handler: functions/get-forecast.handler
-    # events:
-    #   - http:
-    #       path: /getforecast/
-    #       method: get
-    #       request:
-    #         parameters:
-    #           querystrings:
-    #             date: true
-    #             city: true
 
   get-flight:
     handler: functions/get-flight.handler
-    # events:
-    #   - http:
-    #       path: /getflight/
-    #       method: get
-    #       request:
-    #         parameters:
-    #           querystrings:
-    #             id: true
 
   get-departure:
     handler: functions/get-departure.handler
@@ -49,6 +38,29 @@ functions:
               querystrings:
                 id: true
                 date: true
+
+  get-departure-steps-fn:
+    handler: functions/get-departure-steps-fn.handler
+    events:
+      - http:
+          path: /getdeparture-step/
+          method: get
+          request:
+            parameters:
+              querystrings:
+                id: true
+                date: true
+
+  get-departure-steps-fn-status:
+    handler: functions/get-status.handler
+    events:
+      - http:
+          path: /getdeparture-step/status
+          method: get
+          request:
+            parameters:
+              querystrings:
+                id: true
 
 stepFunctions:
   stateMachines: 
