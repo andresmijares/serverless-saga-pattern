@@ -1,0 +1,79 @@
+service: mediocre-saga-sample 
+
+plugins:
+  - serverless-step-functions
+  - serverless-pseudo-parameters
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action: 
+        - "lambda:InvokeFunction"
+      Resource: "arn:aws:lambda:*:*:*"
+
+functions:
+  get-forecast:
+    handler: functions/get-forecast.handler
+    # events:
+    #   - http:
+    #       path: /getforecast/
+    #       method: get
+    #       request:
+    #         parameters:
+    #           querystrings:
+    #             date: true
+    #             city: true
+
+  get-flight:
+    handler: functions/get-flight.handler
+    # events:
+    #   - http:
+    #       path: /getflight/
+    #       method: get
+    #       request:
+    #         parameters:
+    #           querystrings:
+    #             id: true
+
+  get-departure:
+    handler: functions/get-departure.handler
+    events:
+      - http:
+          path: /getdeparture/
+          method: get
+          request:
+            parameters:
+              querystrings:
+                id: true
+                date: true
+
+stepFunctions:
+  stateMachines: 
+    GetDepartureMachine:
+      definition:
+        Comment: "Get Departure information"
+        StartAt: Parallel
+        States:
+          Parallel:
+            Type: Parallel
+            Next: FinalState
+            Branches:
+              - StartAt: GetFlight
+                States:
+                  GetFlight:
+                    Type: Task
+                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-get-flight
+                    End: true
+              - StartAt: GetForecast
+                States:
+                  GetForecast:
+                    Type: Task
+                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-get-forecast
+                    End: true
+          FinalState:
+            Type: Pass
+            End: true
+
